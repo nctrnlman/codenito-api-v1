@@ -1,23 +1,48 @@
 const authService = require("../services/authService");
-const {
-  successResponse,
-  errorResponse,
-} = require("../utils/responseFormatter");
+const { responseFormatter } = require("../utils/responseFormatter");
 
 exports.register = async (req, res) => {
   try {
     const user = await authService.register(req.body);
-    return successResponse(res, "User registered successfully", user, 201);
+    return responseFormatter(
+      res,
+      true,
+      "User registered successfully",
+      user,
+      null,
+      201
+    );
   } catch (err) {
-    return errorResponse(res, err.message, "Registration Error", 400);
+    return responseFormatter(
+      res,
+      false,
+      err.message,
+      null,
+      "Registration Error",
+      400
+    );
   }
 };
 
 exports.login = async (req, res) => {
   try {
     const { token, user } = await authService.login(req.body);
-    return successResponse(res, "Login successful", { token, user }, 200);
+    return responseFormatter(
+      res,
+      true,
+      "Login successful",
+      { token, user },
+      null,
+      200
+    );
   } catch (err) {
-    return errorResponse(res, err.message, "Authentication Error", 400);
+    return responseFormatter(
+      res,
+      false,
+      err.message,
+      null,
+      "Authentication Error",
+      400
+    );
   }
 };

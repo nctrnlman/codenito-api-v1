@@ -6,7 +6,9 @@ class AuthService {
   async register(userData) {
     const existingUser = await userRepository.findUserByEmail(userData.email);
     if (existingUser) {
-      throw new Error("User already exists");
+      throw new Error(
+        "Email is already registered. Please log in or use a different email."
+      );
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -19,18 +21,17 @@ class AuthService {
   async login({ email, password }) {
     const user = await userRepository.findUserByEmail(email);
     if (!user) {
-      throw new Error("Invalid credentials");
+      throw new Error("No account found. Please check and try again.");
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      throw new Error("Invalid credentials");
+      throw new Error("Email or password is incorrect. Please try again.");
     }
-    console.log(process.env.JWT_SECRET);
+
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
-    console.log(token, "token generate");
 
     return { token, user };
   }

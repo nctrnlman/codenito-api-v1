@@ -1,22 +1,20 @@
-const successResponse = (res, message, data = {}, statusCode = 200) => {
+const responseFormatter = (
+  res,
+  success,
+  message,
+  data = null,
+  error = null,
+  statusCode = 200
+) => {
   return res.status(statusCode).json({
     statusCode: statusCode,
-    success: true,
+    success: success,
     message: message,
-    data: data,
-  });
-};
-
-const errorResponse = (res, message, error = "Error", statusCode = 400) => {
-  return res.status(statusCode).json({
-    statusCode: statusCode,
-    success: false,
-    message: message,
-    error: error,
+    data: success ? data : null,
+    error: success ? null : error,
   });
 };
 
 module.exports = {
-  successResponse,
-  errorResponse,
+  responseFormatter,
 };
