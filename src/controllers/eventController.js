@@ -1,51 +1,114 @@
 const eventService = require("../services/eventService");
+const { responseFormatter } = require("../utils/responseFormatter");
 
-exports.getAllEvents = async (req, res) => {
-  try {
-    const { startDate, endDate } = req.query;
-    const events = await eventService.getAllEvents(req.user.id, new Date(startDate), new Date(endDate));
-    res.json(events);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching events", error: error.message });
-  }
-};
+class EventController {
+  async getEvents(req, res) {
+    try {
+      const { year, month } = req.query;
 
-exports.getEventById = async (req, res) => {
-  try {
-    const event = await eventService.getEventById(req.params.id, req.user.id);
-    if (!event) return res.status(404).json({ message: "Event not found" });
-    res.json(event);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching event", error: error.message });
-  }
-};
+      if (!year || !month) {
+        return responseFormatter(
+          res,
+          false,
+          "Year and month are required",
+          null,
+          "Invalid input",
+          400
+        );
+      }
 
-exports.createEvent = async (req, res) => {
-  try {
-    const eventData = { ...req.body, user: req.user.id };
-    const newEvent = await eventService.createEvent(eventData);
-    res.status(201).json(newEvent);
-  } catch (error) {
-    res.status(400).json({ message: "Error creating event", error: error.message });
+      const events = await eventService.getAllEvents(year, month);
+      return responseFormatter(
+        res,
+        true,
+        "Events fetched successfully",
+        events
+      );
+    } catch (error) {
+      return responseFormatter(
+        res,
+        false,
+        "Error fetching events",
+        null,
+        error.message,
+        500
+      );
+    }
   }
-};
 
-exports.updateEvent = async (req, res) => {
-  try {
-    const updatedEvent = await eventService.updateEvent(req.params.id, req.body, req.user.id);
-    if (!updatedEvent) return res.status(404).json({ message: "Event not found" });
-    res.json(updatedEvent);
-  } catch (error) {
-    res.status(400).json({ message: "Error updating event", error: error.message });
-  }
-};
+  async createEvent(req, res) {
+    try {
+      const { title, date, link } = req.body;
 
-exports.deleteEvent = async (req, res) => {
-  try {
-    const deletedEvent = await eventService.deleteEvent(req.params.id, req.user.id);
-    if (!deletedEvent) return res.status(404).json({ message: "Event not found" });
-    res.json({ message: "Event deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Error deleting event", error: error.message });
+      if (!title || !date) {
+        return responseFormatter(
+          res,
+          false,
+          "Title and date are required",
+          null,
+          "Invalid input",
+          400
+        );
+      }
+
+      const newEvent = await eventService.createEvent({
+        title,
+        date,
+        link,
+      });
+      return responseFormatter(
+        res,
+        true,
+        "Event created successfully",
+        newEvent,
+        null,
+        201
+      );
+    } catch (error) {
+      return responseFormatter(
+        res,
+        false,
+        "Error creating event",
+        null,
+        error.message,
+        400
+      );
+    }
   }
-};
+
+  async deleteEvent(req, res) {
+    try {
+      const { id } = req.params;
+      const deletedEvent = await eventService.deleteEvent(id);
+
+      if (!deletedEvent) {
+        return responseFormatter(
+          res,
+          false,
+          "Event not found",
+          null,
+          "Event not found",
+          404
+        );
+      }
+
+      return responseFormatter(
+        res,
+        true,
+        "Event deleted successfully",
+        deletedEvent
+      );
+    } catch (error) {
+      return responseFormatter(
+        res,
+        false,
+        "Error deleting event",
+        null,
+        error.message,
+        500
+      );
+    }
+  }
+}
+
+module.exports = new EventController();
